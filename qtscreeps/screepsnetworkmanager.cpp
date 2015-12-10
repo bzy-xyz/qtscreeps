@@ -287,7 +287,7 @@ void ScreepsNetworkManager::WSProcessBinaryMessage(const QByteArray &message)
 
 void ScreepsNetworkManager::__ws_process_payload(QJsonValue v)
 {
-    qDebug() << "got payload " << v;
+    //qDebug() << "got payload " << v;
     if(v.isString())
     {
         auto str = v.toString();
@@ -342,7 +342,7 @@ void ScreepsNetworkManager::__ws_process_payload(QJsonValue v)
 void ScreepsNetworkManager::__ws_interpret_json_payload(QJsonValue v)
 {
     // got a json payload, need to interpret it properly
-    qDebug() << "PAYLOAD " << v;
+    //qDebug() << "PAYLOAD " << v;
 
     // if this is an array we're treating it as a publish for now
     if(v.isArray())

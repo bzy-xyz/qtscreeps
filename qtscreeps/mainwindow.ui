@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>QtScreeps</string>
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -73,14 +73,14 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
-   <addaction name="actionExit"/>
+   <addaction name="actionConsole"/>
+   <addaction name="actionMessageLog"/>
+   <addaction name="actionErrorLog"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <action name="actionExit">
    <property name="icon">
-    <iconset theme="application-exit">
-     <normaloff/>
-    </iconset>
+    <iconset theme="application-exit"/>
    </property>
    <property name="text">
     <string>Exit</string>
@@ -90,6 +90,33 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Q</string>
+   </property>
+  </action>
+  <action name="actionConsole">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Console</string>
+   </property>
+  </action>
+  <action name="actionMessageLog">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Message Log</string>
+   </property>
+  </action>
+  <action name="actionErrorLog">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Error Log</string>
    </property>
   </action>
  </widget>

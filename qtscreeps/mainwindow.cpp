@@ -10,6 +10,21 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->memoryBar->setRange(0, SCREEPS_MEMCAP);
 
     connect(nm, SIGNAL(GotCPUMessage(int,int)), this, SLOT(UpdateCPU(int,int)));
+
+    messages = new ScreepsLogWindow();
+    errors = new ScreepsLogWindow();
+
+    messages->setWindowTitle("Script Messages");
+    errors->setWindowTitle("Errors");
+
+    connect(nm, SIGNAL(GotConsoleLog(QList<QString>)), messages, SLOT(pushMessages(QList<QString>)));
+    connect(nm, SIGNAL(GotConsoleError(QString)), errors, SLOT(pushMessage(QString)));
+
+    connect(ui->actionMessageLog, SIGNAL(toggled(bool)), messages, SLOT(setVisible(bool)));
+    connect(ui->actionErrorLog, SIGNAL(toggled(bool)), errors, SLOT(setVisible(bool)));
+
+    connect(messages, SIGNAL(closed()), ui->actionMessageLog, SLOT(toggle()));
+    connect(errors, SIGNAL(closed()), ui->actionErrorLog, SLOT(toggle()));
 }
 
 MainWindow::~MainWindow()

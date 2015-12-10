@@ -19,14 +19,17 @@ SOURCES += main.cpp\
     screepslogindialog.cpp \
     screepsnetworkmanager.cpp \
     screepsrngutils.cpp \
-    screepslocalconfigstore.cpp
+    screepslocalconfigstore.cpp \
+    screepslogwindow.cpp
 
 HEADERS  += mainwindow.h \
     screepslogindialog.h \
     screepsnetworkmanager.h \
     screepsrngutils.h \
-    screepslocalconfigstore.h
+    screepslocalconfigstore.h \
+    screepslogwindow.h
 
 FORMS    += mainwindow.ui \
-    screepslogindialog.ui
+    screepslogindialog.ui \
+    screepslogwindow.ui
 

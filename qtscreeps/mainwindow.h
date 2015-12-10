@@ -5,6 +5,8 @@
 
 #include "screepsnetworkmanager.h"
 
+#include "screepslogwindow.h"
+
 #define SCREEPS_MEMCAP 2048 * 1024
 
 namespace Ui {
@@ -22,10 +24,15 @@ public:
 public slots:
     void UpdateCPU(int cpu, int memory);
 
+
 private:
     Ui::MainWindow *ui;
 
     ScreepsNetworkManager * nm = &ScreepsNetworkManager::defaultInstance();
+
+    ScreepsLogWindow * messages;
+    ScreepsLogWindow * errors;
+
 };
 
 #endif // MAINWINDOW_H
