@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui websockets network
+QT       += core gui websockets network sql
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -18,12 +18,14 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     screepslogindialog.cpp \
     screepsnetworkmanager.cpp \
-    screepsrngutils.cpp
+    screepsrngutils.cpp \
+    screepslocalconfigstore.cpp
 
 HEADERS  += mainwindow.h \
     screepslogindialog.h \
     screepsnetworkmanager.h \
-    screepsrngutils.h
+    screepsrngutils.h \
+    screepslocalconfigstore.h
 
 FORMS    += mainwindow.ui \
     screepslogindialog.ui

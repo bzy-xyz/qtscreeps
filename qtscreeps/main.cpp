@@ -11,7 +11,7 @@ int main(int argc, char *argv[])
     //MainWindow w;
     //w.show();
 
-    ScreepsNetworkManager nm;
+    ScreepsNetworkManager & nm = ScreepsNetworkManager::defaultInstance();
     ScreepsLoginDialog ld;
 
     QObject::connect(&ld, SIGNAL(DoLogin(QString,QString)), &nm, SLOT(DoLogin(QString,QString)));

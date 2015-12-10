@@ -3,6 +3,10 @@
 
 #include <QMainWindow>
 
+#include "screepsnetworkmanager.h"
+
+#define SCREEPS_MEMCAP 2048 * 1024
+
 namespace Ui {
 class MainWindow;
 }
@@ -15,8 +19,13 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
+public slots:
+    void UpdateCPU(int cpu, int memory);
+
 private:
     Ui::MainWindow *ui;
+
+    ScreepsNetworkManager * nm = &ScreepsNetworkManager::defaultInstance();
 };
 
 #endif // MAINWINDOW_H

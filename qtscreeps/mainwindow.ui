@@ -19,7 +19,7 @@
      <widget class="QWidget" name="widget" native="true">
       <layout class="QHBoxLayout" name="horizontalLayout">
        <item>
-        <widget class="QProgressBar" name="progressBar">
+        <widget class="QProgressBar" name="cpuBar">
          <property name="value">
           <number>30</number>
          </property>
@@ -27,17 +27,17 @@
           <bool>true</bool>
          </property>
          <property name="format">
-          <string>399/399</string>
+          <string/>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QProgressBar" name="progressBar_2">
+        <widget class="QProgressBar" name="memoryBar">
          <property name="value">
           <number>24</number>
          </property>
          <property name="format">
-          <string>308K/2048K</string>
+          <string/>
          </property>
         </widget>
        </item>
@@ -78,7 +78,9 @@
   <widget class="QStatusBar" name="statusBar"/>
   <action name="actionExit">
    <property name="icon">
-    <iconset theme="application-exit"/>
+    <iconset theme="application-exit">
+     <normaloff/>
+    </iconset>
    </property>
    <property name="text">
     <string>Exit</string>

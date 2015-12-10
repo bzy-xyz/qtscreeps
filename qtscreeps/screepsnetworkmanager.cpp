@@ -1,11 +1,19 @@
 #include "screepsnetworkmanager.h"
 
+#include <algorithm>
+#include <iterator>
+
 ScreepsNetworkManager::ScreepsNetworkManager(QObject *parent) : QObject(parent)
 {
     random_init();
+
+    // websocket connections
     connect(&websocket, SIGNAL(connected()), this, SLOT(DoWSOpenConnected()));
     connect(&websocket, SIGNAL(textMessageReceived(QString)), this, SLOT(WSProcessTextMessage(QString)));
     connect(&websocket, SIGNAL(binaryMessageReceived(QByteArray)), this, SLOT(WSProcessBinaryMessage(QByteArray)));
+
+    // bootstrap connections
+    connect(this, SIGNAL(UserInfoInitialized()), this, SLOT(DoDefaultSubscriptions()));
 }
 
 bool ScreepsNetworkManager::IsConnected()
@@ -57,7 +65,7 @@ QNetworkReply * ScreepsNetworkManager::__do_get_call(QByteArray api_path, QMap<Q
     return networkAccessManager.get(r);
 }
 
-void ScreepsNetworkManager::__ws_send(QString s)
+void ScreepsNetworkManager::__ws_really_send(QString s)
 {
     if(!IsConnected())
     {
@@ -65,7 +73,31 @@ void ScreepsNetworkManager::__ws_send(QString s)
     }
     else
     {
+        qDebug() << "sending " << s;
         websocket.sendTextMessage("[\"" + s + "\"]");
+    }
+}
+
+void ScreepsNetworkManager::__ws_send(QString s)
+{
+    if(!IsWSAuthed())
+    {
+        qDebug() << "queueing deferred send " << s;
+        __ws_deferred_sends.push_back(s);
+    }
+    else
+    {
+        WSSendDeferredMessages();
+        __ws_really_send(s);
+    }
+}
+
+void ScreepsNetworkManager::WSSendDeferredMessages()
+{
+    while(!__ws_deferred_sends.isEmpty())
+    {
+        QString t = __ws_deferred_sends.takeFirst();
+        __ws_really_send(t);
     }
 }
 
@@ -116,12 +148,69 @@ void ScreepsNetworkManager::DoLoginDone()
             else
             {
                 currentToken = o["token"].toString().toUtf8();
+                DoGetMyInfo();
                 DoWSOpen();
             }
         }
     }
 
     r->deleteLater();
+}
+
+void ScreepsNetworkManager::DoGetMyInfo()
+{
+    QNetworkReply * r = __do_get_call("auth/me", QMap<QString,QString>());
+    connect(r, SIGNAL(finished()), this, SLOT(DoGetMyInfoDone()));
+}
+
+void ScreepsNetworkManager::DoGetMyInfoDone()
+{
+    QNetworkReply * r = (QNetworkReply*) QObject::sender();
+
+    if (r->error() != QNetworkReply::NoError)
+    {
+        qDebug() << "Error trying to get user info: " << r->errorString();
+    }
+    else
+    {
+        QByteArray z = r->readAll();
+        QJsonParseError jsonErr;
+        QJsonDocument d = QJsonDocument::fromJson(z, &jsonErr);
+
+        if(jsonErr.error != QJsonParseError::NoError)
+        {
+            qDebug() << "Error trying to parse auth/me reply: " << jsonErr.errorString();
+        }
+        else if(!d.isObject())
+        {
+            qDebug() << "Error: auth/me reply is not a JSON object (instead '" << z << "')";
+        }
+        else
+        {
+            const QJsonObject o = d.object();
+            if(!o.contains("ok"))
+            {
+                qDebug() << "Error: malformed auth/me reply: " << d.toJson(QJsonDocument::Compact);
+            }
+            else
+            {
+                bool wasUninitialized = me.isEmpty();
+                me = o;
+                if(wasUninitialized)
+                {
+                    emit UserInfoInitialized();
+                }
+                emit UserInfoUpdated();
+            }
+        }
+    }
+
+    r->deleteLater();
+}
+
+QVariant ScreepsNetworkManager::getMeParam(const QString key)
+{
+    return me.contains(key) ? me[key].toVariant() : QVariant();
 }
 
 /**
@@ -155,8 +244,8 @@ void ScreepsNetworkManager::DoWSOpenConnected()
         return;
     }
 
-    // try to auth
-    __ws_send("auth " + currentToken);
+    // try to auth (bypassing the send defer mechanism because we're special)
+    __ws_really_send("auth " + currentToken);
 
 }
 
@@ -198,6 +287,7 @@ void ScreepsNetworkManager::WSProcessBinaryMessage(const QByteArray &message)
 
 void ScreepsNetworkManager::__ws_process_payload(QJsonValue v)
 {
+    qDebug() << "got payload " << v;
     if(v.isString())
     {
         auto str = v.toString();
@@ -207,7 +297,8 @@ void ScreepsNetworkManager::__ws_process_payload(QJsonValue v)
         if(jsonErr2.error == QJsonParseError::NoError)
         {
             // this is a JSON object or array, do stuff with it
-            qDebug() << "received alien JSON document: " + d2.toJson(QJsonDocument::Compact);
+            __ws_interpret_json_payload(QJsonValue::fromVariant(d2.toVariant()));
+            //qDebug() << "received alien JSON document: " + d2.toJson(QJsonDocument::Compact);
         }
         else if(str.left(2) == "gz")
         {
@@ -227,7 +318,11 @@ void ScreepsNetworkManager::__ws_process_payload(QJsonValue v)
                     if(strTokens[1] == "ok")
                     {
                         currentToken = strTokens[2].toUtf8();
+                        __ws_authed = true;
+                        WSSendDeferredMessages();
                         emit DoLoginSuccess();
+                        // TODO testing
+
                     }
                     else
                     {
@@ -241,5 +336,102 @@ void ScreepsNetworkManager::__ws_process_payload(QJsonValue v)
                 }
             }
         }
+    }
+}
+
+void ScreepsNetworkManager::__ws_interpret_json_payload(QJsonValue v)
+{
+    // got a json payload, need to interpret it properly
+    qDebug() << "PAYLOAD " << v;
+
+    // if this is an array we're treating it as a publish for now
+    if(v.isArray())
+    {
+        // stream names are of the format type:paramater
+        QString streamName = v.toArray()[0].toString();
+        auto streamNameTokens = QVector<QString>::fromList(streamName.split(QChar(':')));
+        if(streamNameTokens.length())
+        {
+            // react by stream type
+            // user property?
+            if(streamNameTokens[0] == "user")
+            {
+                // interpret the parameter path
+                auto userParamTokens = QVector<QString>::fromList(streamNameTokens[1].split(QChar('/')));
+                // react by parameter type (since our player id seems always the same for now...)
+                if(userParamTokens[1] == "cpu")
+                {
+                    // this is a CPU message
+                    QJsonObject cpuData = v.toArray()[1].toObject();
+                    emit GotCPUMessage(cpuData["cpu"].toInt(), cpuData["memory"].toInt());
+                }
+                else if(userParamTokens[1] == "console")
+                {
+                    // this is console data
+                    QJsonObject consoleData = v.toArray()[1].toObject();
+                    if(consoleData.contains("messages"))
+                    {
+                        // payload includes messages
+                        QJsonObject messagesData = consoleData["messages"].toObject();
+                        if(messagesData.contains("log"))
+                        {
+                            QJsonArray logMessages = messagesData["log"].toArray();
+                            // convert to QList<QString> for convenience
+                            // (forget about nonstring elems, should not have them anyway)
+                            QList<QString> logStrings;
+                            std::transform(logMessages.begin(), logMessages.end(), std::back_inserter(logStrings), [](QJsonValueRef s) {
+                                return s.toString();
+                            });
+                            // then emit log signal
+                            emit GotConsoleLog(logStrings);
+                        }
+                        if(messagesData.contains("results"))
+                        {
+                            QJsonArray logResults = messagesData["log"].toArray();
+                            // convert to QList<QString> for convenience
+                            // (forget about nonstring elems, should not have them anyway)
+                            QList<QString> logResultStrings;
+                            std::transform(logResults.begin(), logResults.end(), std::back_inserter(logResultStrings), [](QJsonValueRef s) {
+                                return s.toString();
+                            });
+                            // then emit results signal
+                            emit GotConsoleLog(logResultStrings);
+                        }
+                    }
+                    if(consoleData.contains("error"))
+                    {
+                        // payload includes an error string
+                        emit GotConsoleError(consoleData["error"].toString());
+                    }
+                }
+            }
+            // minimap overlay?
+            else if(streamNameTokens[0] == "roomMap2")
+            {
+
+            }
+            // room details?
+            else if(streamNameTokens[0] == "room")
+            {
+
+            }
+        }
+    }
+}
+
+void ScreepsNetworkManager::DoSubscribe(const QString stream)
+{
+    QString s = QString("subscribe %1").arg(stream);
+    qDebug() << s;
+    __ws_send(s);
+}
+
+void ScreepsNetworkManager::DoDefaultSubscriptions()
+{
+    // this method needs a valid me object
+    if(!me.isEmpty())
+    {
+        DoSubscribe(QString("user:%1/cpu").arg(me["_id"].toString()));
+        DoSubscribe(QString("user:%1/console").arg(me["_id"].toString()));
     }
 }
