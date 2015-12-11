@@ -15,21 +15,26 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        mainwindow.cpp \
     screepslogindialog.cpp \
     screepsnetworkmanager.cpp \
     screepsrngutils.cpp \
     screepslocalconfigstore.cpp \
-    screepslogwindow.cpp
+    screepslogwindow.cpp \
+    screepsmainwindow.cpp \
+    screepsconsolewindow.cpp
 
-HEADERS  += mainwindow.h \
+HEADERS  += \
     screepslogindialog.h \
     screepsnetworkmanager.h \
     screepsrngutils.h \
     screepslocalconfigstore.h \
-    screepslogwindow.h
+    screepslogwindow.h \
+    screepsmainwindow.h \
+    screepsconsolewindow.h
 
-FORMS    += mainwindow.ui \
+FORMS    += \
     screepslogindialog.ui \
-    screepslogwindow.ui
+    screepslogwindow.ui \
+    screepsmainwindow.ui \
+    screepsconsolewindow.ui
 

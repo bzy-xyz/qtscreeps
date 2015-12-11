@@ -20,7 +20,7 @@ struct ScreepsLogWindowRow
 class ScreepsLogWindowModel : public QAbstractTableModel
 {
 
-    QVector<ScreepsLogWindowRow> __data;
+    QList<ScreepsLogWindowRow> __data;
 public:
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
     int columnCount(const QModelIndex &parent = QModelIndex()) const;
@@ -29,6 +29,8 @@ public:
     QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const;
 
     bool appendLogMessage(QString message);
+
+    void clampScrollback(int limit);
 };
 
 class ScreepsLogWindow : public QWidget
@@ -41,17 +43,19 @@ public:
 
 protected:
     void closeEvent(QCloseEvent *);
+    void resizeEvent(QResizeEvent *);
     void showEvent(QShowEvent *);
-    //bool event(QEvent *);
-
-    void maybeSetAutoscroll();
-    void maybeScrollToBottom();
 
 private:
     Ui::ScreepsLogWindow *ui;
     ScreepsLogWindowModel m;
 
     bool autoscroll = false;
+    unsigned int scrollbackLimit = 10000;
+
+    void maybeSetAutoscroll();
+    void maybeScrollToBottom();
+
 
 signals:
     void closed();

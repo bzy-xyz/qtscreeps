@@ -25,6 +25,9 @@ private:
 
     QNetworkReply * __do_post_call(QByteArray api_path, QJsonDocument args);
     QNetworkReply * __do_get_call(QByteArray api_path, QMap<QString, QString> args = QMap<QString,QString>());
+
+    void __update_token(QNetworkReply * r);
+
     void __ws_send(QString s);
     void __ws_really_send(QString s);
 
@@ -74,6 +77,9 @@ public slots:
     void DoDefaultSubscriptions();
 
     void WSSendDeferredMessages();
+
+    void DoSendConsoleCommand(const QString cmd);
+    void DoSendConsoleCommandDone();
 
 };
 

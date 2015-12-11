@@ -6,32 +6,37 @@
 #include "screepsnetworkmanager.h"
 
 #include "screepslogwindow.h"
+#include "screepsconsolewindow.h"
 
 #define SCREEPS_MEMCAP 2048 * 1024
 
 namespace Ui {
-class MainWindow;
+class ScreepsMainWindow;
 }
 
-class MainWindow : public QMainWindow
+class ScreepsMainWindow : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget *parent = 0);
-    ~MainWindow();
+    explicit ScreepsMainWindow(QWidget *parent = 0);
+    ~ScreepsMainWindow();
 
 public slots:
     void UpdateCPU(int cpu, int memory);
 
 
+protected:
+    void closeEvent(QCloseEvent *);
+
 private:
-    Ui::MainWindow *ui;
+    Ui::ScreepsMainWindow *ui;
 
     ScreepsNetworkManager * nm = &ScreepsNetworkManager::defaultInstance();
 
     ScreepsLogWindow * messages;
     ScreepsLogWindow * errors;
+    ScreepsConsoleWindow * console;
 
 };
 

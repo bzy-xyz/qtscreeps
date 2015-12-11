@@ -65,6 +65,14 @@ QNetworkReply * ScreepsNetworkManager::__do_get_call(QByteArray api_path, QMap<Q
     return networkAccessManager.get(r);
 }
 
+void ScreepsNetworkManager::__update_token(QNetworkReply *r)
+{
+    if(r->hasRawHeader("X-Token"))
+    {
+        currentToken = r->rawHeader("X-Token");
+    }
+}
+
 void ScreepsNetworkManager::__ws_really_send(QString s)
 {
     if(!IsConnected())
@@ -203,6 +211,8 @@ void ScreepsNetworkManager::DoGetMyInfoDone()
                 emit UserInfoUpdated();
             }
         }
+
+        __update_token(r);
     }
 
     r->deleteLater();
@@ -387,7 +397,7 @@ void ScreepsNetworkManager::__ws_interpret_json_payload(QJsonValue v)
                         }
                         if(messagesData.contains("results"))
                         {
-                            QJsonArray logResults = messagesData["log"].toArray();
+                            QJsonArray logResults = messagesData["results"].toArray();
                             // convert to QList<QString> for convenience
                             // (forget about nonstring elems, should not have them anyway)
                             QList<QString> logResultStrings;
@@ -395,7 +405,7 @@ void ScreepsNetworkManager::__ws_interpret_json_payload(QJsonValue v)
                                 return s.toString();
                             });
                             // then emit results signal
-                            emit GotConsoleLog(logResultStrings);
+                            emit GotConsoleResults(logResultStrings);
                         }
                     }
                     if(consoleData.contains("error"))
@@ -434,4 +444,55 @@ void ScreepsNetworkManager::DoDefaultSubscriptions()
         DoSubscribe(QString("user:%1/cpu").arg(me["_id"].toString()));
         DoSubscribe(QString("user:%1/console").arg(me["_id"].toString()));
     }
+}
+
+void ScreepsNetworkManager::DoSendConsoleCommand(const QString cmd)
+{
+    QJsonObject o {
+        {"expression", cmd}
+    };
+    QNetworkReply * r = __do_post_call("user/console", QJsonDocument(o));
+
+    connect(r, SIGNAL(finished()), this, SLOT(DoSendConsoleCommandDone()));
+}
+
+void ScreepsNetworkManager::DoSendConsoleCommandDone()
+{
+    QNetworkReply * r = (QNetworkReply*) QObject::sender();
+
+    if (r->error() != QNetworkReply::NoError)
+    {
+        qDebug() << "Error trying to send console command: " << r->errorString();
+    }
+    else
+    {
+        QByteArray z = r->readAll();
+        QJsonParseError jsonErr;
+        QJsonDocument d = QJsonDocument::fromJson(z, &jsonErr);
+
+        if(jsonErr.error != QJsonParseError::NoError)
+        {
+            qDebug() << "Error trying to parse console command reply: " << jsonErr.errorString();
+        }
+        else if(!d.isObject())
+        {
+            qDebug() << "Error: console command reply is not a JSON object (instead '" << z << "')";
+        }
+        else
+        {
+            const QJsonObject o = d.object();
+            if(!o.contains("ok"))
+            {
+                qDebug() << "Error: malformed console command reply: " << d.toJson(QJsonDocument::Compact);
+            }
+            else
+            {
+                // do nothing
+                //qDebug() << o;
+            }
+        }
+        __update_token(r);
+    }
+
+    r->deleteLater();
 }

@@ -1,7 +1,7 @@
 #include <QtCore>
 #include <QtWidgets>
 
-#include "mainwindow.h"
+#include "screepsmainwindow.h"
 #include "screepslogindialog.h"
 #include "screepsnetworkmanager.h"
 

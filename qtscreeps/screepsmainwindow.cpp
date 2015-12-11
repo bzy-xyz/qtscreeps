@@ -1,10 +1,10 @@
-#include "mainwindow.h"
-#include "ui_mainwindow.h"
+#include "screepsmainwindow.h"
+#include "ui_screepsmainwindow.h"
 
 
-MainWindow::MainWindow(QWidget *parent) :
+ScreepsMainWindow::ScreepsMainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    ui(new Ui::ScreepsMainWindow)
 {
     ui->setupUi(this);
     ui->memoryBar->setRange(0, SCREEPS_MEMCAP);
@@ -13,6 +13,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     messages = new ScreepsLogWindow();
     errors = new ScreepsLogWindow();
+    console = new ScreepsConsoleWindow();
 
     messages->setWindowTitle("Script Messages");
     errors->setWindowTitle("Errors");
@@ -20,19 +21,32 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(nm, SIGNAL(GotConsoleLog(QList<QString>)), messages, SLOT(pushMessages(QList<QString>)));
     connect(nm, SIGNAL(GotConsoleError(QString)), errors, SLOT(pushMessage(QString)));
 
+    connect(nm, SIGNAL(GotConsoleResults(QList<QString>)), console, SLOT(addIncomingLines(QList<QString>)));
+    connect(nm, SIGNAL(GotConsoleError(QString)), console, SLOT(addIncomingLine(QString)));
+    connect(console, SIGNAL(lineEntered(QString)), nm, SLOT(DoSendConsoleCommand(QString)));
+    connect(console, SIGNAL(lineEntered(QString)), console, SLOT(addOutgoingLine(QString)));
+
     connect(ui->actionMessageLog, SIGNAL(toggled(bool)), messages, SLOT(setVisible(bool)));
     connect(ui->actionErrorLog, SIGNAL(toggled(bool)), errors, SLOT(setVisible(bool)));
+    connect(ui->actionConsole, SIGNAL(toggled(bool)), console, SLOT(setVisible(bool)));
 
     connect(messages, SIGNAL(closed()), ui->actionMessageLog, SLOT(toggle()));
     connect(errors, SIGNAL(closed()), ui->actionErrorLog, SLOT(toggle()));
+    connect(console, SIGNAL(closed()), ui->actionConsole, SLOT(toggle()));
 }
 
-MainWindow::~MainWindow()
+ScreepsMainWindow::~ScreepsMainWindow()
 {
     delete ui;
 }
 
-void MainWindow::UpdateCPU(int cpu, int memory)
+void ScreepsMainWindow::closeEvent(QCloseEvent * ev)
+{
+    ev->accept();
+    QApplication::exit();
+}
+
+void ScreepsMainWindow::UpdateCPU(int cpu, int memory)
 {
 
     int cpuMax = nm->getMeParam("cpu").toInt();

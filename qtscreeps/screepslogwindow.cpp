@@ -19,7 +19,7 @@ int ScreepsLogWindowModel::columnCount(const QModelIndex &parent) const
 
 QVariant ScreepsLogWindowModel::data(const QModelIndex &index, int role) const
 {
-    ScreepsLogWindowRow r = __data[index.row()];
+    ScreepsLogWindowRow r = __data.at(index.row());
 
     if(role == Qt::DisplayRole)
     {
@@ -70,6 +70,21 @@ bool ScreepsLogWindowModel::appendLogMessage(QString message)
     return true;
 }
 
+void ScreepsLogWindowModel::clampScrollback(int limit)
+{
+    int delta = rowCount() - limit;
+    if(delta > 0)
+    {
+        beginRemoveRows(QModelIndex(), 0, delta - 1);
+        while(delta > 0)
+        {
+            __data.pop_front();
+            delta--;
+        }
+        endRemoveRows();
+    }
+}
+
 ScreepsLogWindow::ScreepsLogWindow(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::ScreepsLogWindow)
@@ -90,6 +105,7 @@ void ScreepsLogWindow::pushMessage(QString message)
     maybeSetAutoscroll();
     m.appendLogMessage(message);
     ui->tableView->resizeRowToContents(m.rowCount()-1);
+    m.clampScrollback(scrollbackLimit);
     ui->tableView->resizeColumnToContents(0);
     maybeScrollToBottom();
 }
@@ -102,6 +118,7 @@ void ScreepsLogWindow::pushMessages(QList<QString> messages)
         m.appendLogMessage(msg);
         ui->tableView->resizeRowToContents(m.rowCount()-1);
     }
+    m.clampScrollback(scrollbackLimit);
     ui->tableView->resizeColumnToContents(0);
     maybeScrollToBottom();
 }
@@ -118,6 +135,7 @@ void ScreepsLogWindow::maybeScrollToBottom()
         ui->tableView->scrollToBottom();
     }
 }
+
 
 void ScreepsLogWindow::showEvent(QShowEvent * ev)
 {
@@ -143,17 +161,10 @@ void ScreepsLogWindow::postWindowShown()
     ui->tableView->resizeRowsToContents();
 }
 
-/*bool ScreepsLogWindow::event(QEvent * ev)
+void ScreepsLogWindow::resizeEvent(QResizeEvent * ev)
 {
-    switch(ev->type())
-    {
-    case QEvent::Polish:
-        qDebug() << "polish";
-        ui->tableView->resizeColumnToContents(0);
-        ui->tableView->resizeRowsToContents();
-        ev->accept();
-        return true;
-    default:
-        return QWidget::event(ev);
-    }
-}*/
+    ui->tableView->resizeColumnToContents(0);
+    ui->tableView->resizeRowsToContents();
+    ev->accept();
+}
+

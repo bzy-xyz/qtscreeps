@@ -1,7 +1,7 @@
 #include "screepslogindialog.h"
 #include "ui_screepslogindialog.h"
 
-#include "mainwindow.h"
+#include "screepsmainwindow.h"
 
 #include "screepslocalconfigstore.h"
 
@@ -61,7 +61,7 @@ void ScreepsLoginDialog::LoginSuccess()
     // QApplication tracks top level widgets automatically
     // so this should be OK
 
-    auto mw = new MainWindow();
+    auto mw = new ScreepsMainWindow();
     mw->show();
 
     this->close();
