@@ -17,6 +17,7 @@ ScreepsRoom::ScreepsRoom(QObject *parent, QString roomName)
 void ScreepsRoom::UpdateRoomTerrain(QString terrainData)
 {
     worldBackground->setTerrain(terrainData);
+    this->terrainData = terrainData;
 
     ScreepsTerrainCache & cfgStore = ScreepsTerrainCache::defaultInstance();
 

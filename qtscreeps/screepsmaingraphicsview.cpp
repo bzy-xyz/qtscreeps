@@ -9,7 +9,7 @@ ScreepsMainGraphicsView::ScreepsMainGraphicsView(QWidget * parent)
 {
 
     this->setScene(&scene);
-    this->setSceneRect(-1550, -1550, 4600, 4600);
+    this->setSceneRect(SCREEPS_MINX, SCREEPS_MINY, SCREEPS_XSIZE, SCREEPS_YSIZE);
     this->scale(2.0, 2.0);
     this->centerOn(0, 0);
     this->setDragMode(QGraphicsView::ScrollHandDrag);
@@ -23,11 +23,15 @@ ScreepsMainGraphicsView::ScreepsMainGraphicsView(QWidget * parent)
     connect(&nm, SIGNAL(GotRoomMap2Data(QString,QJsonObject)), this, SLOT(GotRoomMap2Update(QString,QJsonObject)));
 
     // preallocating rooms statically for now...
-    for(int x = 0; x < 4600; x += 50)
+    for(int x = 0; x < SCREEPS_XSIZE; x += 50)
     {
-        for(int y = 0; y < 4600; y += 50)
+        for(int y = 0; y < SCREEPS_YSIZE; y += 50)
         {
-            this->__room_create(QtScreeps::roomNameFromBaseCoords(x - 1550, y - 1550), x - 1550, y - 1550);
+            this->__room_create(QtScreeps::roomNameFromBaseCoords(
+                                    x + SCREEPS_MINX,
+                                    y + SCREEPS_MINY),
+                                x + SCREEPS_MINX,
+                                y + SCREEPS_MINY);
         }
     }
 

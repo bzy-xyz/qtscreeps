@@ -6,6 +6,11 @@
 
 #include "screepsroom.h"
 
+#define SCREEPS_MINX -1550
+#define SCREEPS_MINY -1550
+#define SCREEPS_XSIZE 3100
+#define SCREEPS_YSIZE 3100
+
 class ScreepsMainGraphicsView : public QGraphicsView
 {
     Q_OBJECT

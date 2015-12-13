@@ -9,7 +9,7 @@ ScreepsTerrainCache::~ScreepsTerrainCache()
 {
     if(!configStore.isNull())
     {
-        configStore->setBatch(QVariant(inMemoryCache.keys()).toList(), QVariant(inMemoryCache.values()).toList());
+        configStore->setBatch(QVariant(previouslyUncached.keys()).toList(), QVariant(previouslyUncached.values()).toList());
     }
 }
 
@@ -32,6 +32,10 @@ QString ScreepsTerrainCache::get(QString key)
 
 bool ScreepsTerrainCache::set(QString key, QString value)
 {
+    if(!inMemoryCache.contains(key))
+    {
+        previouslyUncached[key] = value;
+    }
     inMemoryCache[key] = value;
     return true;
 }

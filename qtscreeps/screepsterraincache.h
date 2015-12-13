@@ -30,6 +30,7 @@ private:
     QSharedPointer<ScreepsLocalConfigStore> configStore;
 
     QMap<QString, QString> inMemoryCache;
+    QMap<QString, QString> previouslyUncached;
 };
 
 #endif // SCREEPSTERRAINCACHE_H
