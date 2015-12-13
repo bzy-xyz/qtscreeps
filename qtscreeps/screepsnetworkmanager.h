@@ -7,6 +7,8 @@
 #include <QtNetwork>
 #include <QtDebug>
 
+#include <functional>
+
 #include "screepsrngutils.h"
 
 class ScreepsNetworkManager : public QObject
@@ -34,6 +36,8 @@ private:
     void __ws_process_payload(QJsonValue v);
     void __ws_interpret_json_payload(QJsonValue v);
 
+    QJsonObject __web_call_json_object_ok(QNetworkReply * r, QString thing = "something");
+
 public:
     static ScreepsNetworkManager & defaultInstance()
     {
@@ -60,6 +64,9 @@ signals:
     void GotConsoleResults(QList<QString> messages);
     void GotConsoleError(QString message);
 
+    void GotRoomTerrain(QString roomName, QString terrainData);
+    void GotRoomMap2Data(QString roomName, QJsonObject rm2);
+
 public slots:
     void DoLogin(QString email, QString password);
     void DoLoginDone();
@@ -80,6 +87,13 @@ public slots:
 
     void DoSendConsoleCommand(const QString cmd);
     void DoSendConsoleCommandDone();
+
+    void DoGetRoomTerrain(const QString roomName);
+    void DoGetRoomTerrainDone();
+
+    void DoSubscribeRoomMap2(const QString roomName);
+    void DoSubscribeRoomFeed(const QString roomName);
+
 
 };
 

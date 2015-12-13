@@ -30,6 +30,7 @@ ScreepsLocalConfigStore::ScreepsLocalConfigStore(QObject *parent, QString storeN
 
     // set up the db if it's not yet set up
     QSqlQuery q1("CREATE TABLE IF NOT EXISTS config (key PRIMARY KEY, value)", db);
+    //QSqlQuery q2("CREATE TABLE IF NOT EXISTS terrainCache (room PRIMARY KEY, terrain)", db);
 
     // ready!
 }
@@ -59,6 +60,15 @@ bool ScreepsLocalConfigStore::set(QString key, QString value)
     q.bindValue(":key", key);
     q.bindValue(":value", value);
     return q.exec();
+}
+
+bool ScreepsLocalConfigStore::setBatch(QVariantList keys, QVariantList values)
+{
+    QSqlQuery q = QSqlQuery(db);
+    q.prepare("INSERT OR REPLACE INTO config (key, value) VALUES (:key, :value)");
+    q.bindValue(":key", keys);
+    q.bindValue(":value", values);
+    return q.execBatch();
 }
 
 QSqlError ScreepsLocalConfigStore::lastError()

@@ -73,6 +73,43 @@ void ScreepsNetworkManager::__update_token(QNetworkReply *r)
     }
 }
 
+QJsonObject ScreepsNetworkManager::__web_call_json_object_ok(QNetworkReply *r, QString thing)
+{
+    QJsonObject ret = QJsonObject();
+    if (r->error() != QNetworkReply::NoError)
+    {
+        qDebug() << "Error trying to get " << thing << ": " << r->errorString();
+    }
+    else
+    {
+        QByteArray z = r->readAll();
+        QJsonParseError jsonErr;
+        QJsonDocument d = QJsonDocument::fromJson(z, &jsonErr);
+
+        if(jsonErr.error != QJsonParseError::NoError)
+        {
+            qDebug() << "Error trying to parse " << thing << ": " << jsonErr.errorString();
+        }
+        else if(!d.isObject())
+        {
+            qDebug() << "Error: " << thing << " is not a JSON object (instead '" << z << "')";
+        }
+        else
+        {
+            const QJsonObject o = d.object();
+            ret = o;
+            if(!o.contains("ok"))
+            {
+                qDebug() << "Error: malformed " << thing << ": " << d.toJson(QJsonDocument::Compact);
+            }
+        }
+
+        __update_token(r);
+    }
+
+    return ret;
+}
+
 void ScreepsNetworkManager::__ws_really_send(QString s)
 {
     if(!IsConnected())
@@ -175,45 +212,18 @@ void ScreepsNetworkManager::DoGetMyInfoDone()
 {
     QNetworkReply * r = (QNetworkReply*) QObject::sender();
 
-    if (r->error() != QNetworkReply::NoError)
+    const QJsonObject o = __web_call_json_object_ok(r, "auth/me reply");
+    if(o.contains("ok"))
     {
-        qDebug() << "Error trying to get user info: " << r->errorString();
+        bool wasUninitialized = me.isEmpty();
+        me = o;
+        if(wasUninitialized)
+        {
+            emit UserInfoInitialized();
+        }
+        emit UserInfoUpdated();
     }
-    else
-    {
-        QByteArray z = r->readAll();
-        QJsonParseError jsonErr;
-        QJsonDocument d = QJsonDocument::fromJson(z, &jsonErr);
 
-        if(jsonErr.error != QJsonParseError::NoError)
-        {
-            qDebug() << "Error trying to parse auth/me reply: " << jsonErr.errorString();
-        }
-        else if(!d.isObject())
-        {
-            qDebug() << "Error: auth/me reply is not a JSON object (instead '" << z << "')";
-        }
-        else
-        {
-            const QJsonObject o = d.object();
-            if(!o.contains("ok"))
-            {
-                qDebug() << "Error: malformed auth/me reply: " << d.toJson(QJsonDocument::Compact);
-            }
-            else
-            {
-                bool wasUninitialized = me.isEmpty();
-                me = o;
-                if(wasUninitialized)
-                {
-                    emit UserInfoInitialized();
-                }
-                emit UserInfoUpdated();
-            }
-        }
-
-        __update_token(r);
-    }
 
     r->deleteLater();
 }
@@ -418,7 +428,7 @@ void ScreepsNetworkManager::__ws_interpret_json_payload(QJsonValue v)
             // minimap overlay?
             else if(streamNameTokens[0] == "roomMap2")
             {
-
+                emit GotRoomMap2Data(streamNameTokens[1], v.toArray()[1].toObject());
             }
             // room details?
             else if(streamNameTokens[0] == "room")
@@ -460,39 +470,51 @@ void ScreepsNetworkManager::DoSendConsoleCommandDone()
 {
     QNetworkReply * r = (QNetworkReply*) QObject::sender();
 
-    if (r->error() != QNetworkReply::NoError)
-    {
-        qDebug() << "Error trying to send console command: " << r->errorString();
-    }
-    else
-    {
-        QByteArray z = r->readAll();
-        QJsonParseError jsonErr;
-        QJsonDocument d = QJsonDocument::fromJson(z, &jsonErr);
+    __web_call_json_object_ok(r, "console command response");
 
-        if(jsonErr.error != QJsonParseError::NoError)
+    r->deleteLater();
+}
+
+void ScreepsNetworkManager::DoGetRoomTerrain(const QString roomName)
+{
+    QMap<QString, QString> params {
+        {"room", roomName},
+        {"encoded", "true"}
+    };
+    QNetworkReply * r = __do_get_call("game/room-terrain", params);
+
+    connect(r, SIGNAL(finished()), this, SLOT(DoGetRoomTerrainDone()));
+}
+
+void ScreepsNetworkManager::DoGetRoomTerrainDone()
+{
+    QNetworkReply * r = (QNetworkReply*) QObject::sender();
+
+    QJsonObject o = __web_call_json_object_ok(r, "room terrain");
+    if(o.contains("ok") && o.contains("terrain"))
+    {
+        QJsonArray t = o["terrain"].toArray();
+        if(t.size())
         {
-            qDebug() << "Error trying to parse console command reply: " << jsonErr.errorString();
-        }
-        else if(!d.isObject())
-        {
-            qDebug() << "Error: console command reply is not a JSON object (instead '" << z << "')";
-        }
-        else
-        {
-            const QJsonObject o = d.object();
-            if(!o.contains("ok"))
+            QJsonObject rI = t[0].toObject();
+            if(rI.contains("room") && rI.contains("terrain"))
             {
-                qDebug() << "Error: malformed console command reply: " << d.toJson(QJsonDocument::Compact);
-            }
-            else
-            {
-                // do nothing
-                //qDebug() << o;
+                QString rN = rI["room"].toString();
+                QString tD = rI["terrain"].toString();
+                emit GotRoomTerrain(rN, tD);
             }
         }
-        __update_token(r);
     }
 
     r->deleteLater();
+}
+
+void ScreepsNetworkManager::DoSubscribeRoomMap2(const QString roomName)
+{
+    DoSubscribe("roomMap2:" + roomName);
+}
+
+void ScreepsNetworkManager::DoSubscribeRoomFeed(const QString roomName)
+{
+    DoSubscribe("room:" + roomName);
 }

@@ -23,6 +23,7 @@ public:
 
     QString get(QString key);
     bool set(QString key, QString value);
+    bool setBatch(QVariantList keys, QVariantList values);
     QSqlError lastError();
 
 

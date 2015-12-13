@@ -33,6 +33,8 @@ ScreepsMainWindow::ScreepsMainWindow(QWidget *parent) :
     connect(messages, SIGNAL(closed()), ui->actionMessageLog, SLOT(toggle()));
     connect(errors, SIGNAL(closed()), ui->actionErrorLog, SLOT(toggle()));
     connect(console, SIGNAL(closed()), ui->actionConsole, SLOT(toggle()));
+
+    connect(ui->graphicsView, SIGNAL(StatusBarSignal(QString)), this, SLOT(SetStatusBar(QString)));
 }
 
 ScreepsMainWindow::~ScreepsMainWindow()
@@ -44,6 +46,11 @@ void ScreepsMainWindow::closeEvent(QCloseEvent * ev)
 {
     ev->accept();
     QApplication::exit();
+}
+
+void ScreepsMainWindow::SetStatusBar(QString text)
+{
+    ui->statusBar->showMessage(text);
 }
 
 void ScreepsMainWindow::UpdateCPU(int cpu, int memory)

@@ -45,7 +45,14 @@
      </widget>
     </item>
     <item>
-     <widget class="QGraphicsView" name="graphicsView"/>
+     <widget class="ScreepsMainGraphicsView" name="graphicsView">
+      <property name="verticalScrollBarPolicy">
+       <enum>Qt::ScrollBarAlwaysOff</enum>
+      </property>
+      <property name="horizontalScrollBarPolicy">
+       <enum>Qt::ScrollBarAlwaysOff</enum>
+      </property>
+     </widget>
     </item>
    </layout>
   </widget>
@@ -80,7 +87,9 @@
   <widget class="QStatusBar" name="statusBar"/>
   <action name="actionExit">
    <property name="icon">
-    <iconset theme="application-exit"/>
+    <iconset theme="application-exit">
+     <normaloff/>
+    </iconset>
    </property>
    <property name="text">
     <string>Exit</string>
@@ -121,6 +130,13 @@
   </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>ScreepsMainGraphicsView</class>
+   <extends>QGraphicsView</extends>
+   <header>screepsmaingraphicsview.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

@@ -21,7 +21,13 @@ SOURCES += main.cpp\
     screepslocalconfigstore.cpp \
     screepslogwindow.cpp \
     screepsmainwindow.cpp \
-    screepsconsolewindow.cpp
+    screepsconsolewindow.cpp \
+    screepsmaingraphicsview.cpp \
+    screepsroom.cpp \
+    screepsroomtile.cpp \
+    screepsroommap2.cpp \
+    screepscoordutils.cpp \
+    screepsterraincache.cpp
 
 HEADERS  += \
     screepslogindialog.h \
@@ -30,7 +36,13 @@ HEADERS  += \
     screepslocalconfigstore.h \
     screepslogwindow.h \
     screepsmainwindow.h \
-    screepsconsolewindow.h
+    screepsconsolewindow.h \
+    screepsmaingraphicsview.h \
+    screepsroom.h \
+    screepsroomtile.h \
+    screepsroommap2.h \
+    screepscoordutils.h \
+    screepsterraincache.h
 
 FORMS    += \
     screepslogindialog.ui \

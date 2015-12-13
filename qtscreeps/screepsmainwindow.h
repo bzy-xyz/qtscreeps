@@ -24,6 +24,7 @@ public:
 
 public slots:
     void UpdateCPU(int cpu, int memory);
+    void SetStatusBar(QString text);
 
 
 protected:
