@@ -442,7 +442,14 @@ void ScreepsNetworkManager::__ws_interpret_json_payload(QJsonValue v)
 void ScreepsNetworkManager::DoSubscribe(const QString stream)
 {
     QString s = QString("subscribe %1").arg(stream);
-    qDebug() << s;
+    //qDebug() << s;
+    __ws_send(s);
+}
+
+void ScreepsNetworkManager::DoUnsubscribe(const QString stream)
+{
+    QString s = QString("unsubscribe %1").arg(stream);
+    //qDebug() << s;
     __ws_send(s);
 }
 
@@ -517,4 +524,14 @@ void ScreepsNetworkManager::DoSubscribeRoomMap2(const QString roomName)
 void ScreepsNetworkManager::DoSubscribeRoomFeed(const QString roomName)
 {
     DoSubscribe("room:" + roomName);
+}
+
+void ScreepsNetworkManager::DoUnsubscribeRoomMap2(const QString roomName)
+{
+    DoUnsubscribe("roomMap2:" + roomName);
+}
+
+void ScreepsNetworkManager::DoUnsubscribeRoomFeed(const QString roomName)
+{
+    DoUnsubscribe("room:" + roomName);
 }

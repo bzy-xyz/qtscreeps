@@ -81,6 +81,7 @@ public slots:
     void WSProcessTextMessage(const QString & message);
 
     void DoSubscribe(const QString stream);
+    void DoUnsubscribe(const QString stream);
     void DoDefaultSubscriptions();
 
     void WSSendDeferredMessages();
@@ -93,6 +94,8 @@ public slots:
 
     void DoSubscribeRoomMap2(const QString roomName);
     void DoSubscribeRoomFeed(const QString roomName);
+    void DoUnsubscribeRoomMap2(const QString roomName);
+    void DoUnsubscribeRoomFeed(const QString roomName);
 
 
 };

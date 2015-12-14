@@ -36,6 +36,8 @@ private:
     QGraphicsScene scene;
     QMap<QString, QSharedPointer<ScreepsRoom>> rooms;
 
+    QSet<QGraphicsItem *> roomsLastVisible;
+
     void __room_create(QString roomName, qreal x, qreal y);
 
     void __handle_viewport_translate();

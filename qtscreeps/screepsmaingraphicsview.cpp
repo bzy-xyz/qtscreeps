@@ -50,6 +50,7 @@ void ScreepsMainGraphicsView::__room_create(QString roomName, qreal x, qreal y)
 
     connect(rooms[roomName].data(), SIGNAL(RequestRoomTerrain(QString)), &nm, SLOT(DoGetRoomTerrain(QString)));
     connect(rooms[roomName].data(), SIGNAL(SubscribeRoomMap2(QString)), &nm, SLOT(DoSubscribeRoomMap2(QString)));
+    connect(rooms[roomName].data(), SIGNAL(UnsubscribeRoomMap2(QString)), &nm, SLOT(DoUnsubscribeRoomMap2(QString)));
 }
 
 void ScreepsMainGraphicsView::GotRoomTerrain(QString roomName, QString terrainData)
@@ -95,16 +96,36 @@ void ScreepsMainGraphicsView::__handle_viewport_translate()
 {
     QRectF r = mapToScene(this->viewport()->rect()).boundingRect();
 
-    QList<QGraphicsItem *> visibleItems = scene.items(r);
-    foreach(QGraphicsItem * i, visibleItems)
+    QSet<QGraphicsItem *> currentlyVisibleItems = QSet<QGraphicsItem*>::fromList(scene.items(r));
+
+    QSet<QGraphicsItem *> newlyVisibleItems = currentlyVisibleItems - roomsLastVisible;
+
+    // notify rooms newly in viewport
+    foreach(QGraphicsItem * i, newlyVisibleItems)
     {
         if(i->type() == ScreepsRoomMap2::Type)
         {
             ScreepsRoomMap2 * ii = qgraphicsitem_cast<ScreepsRoomMap2*>(i);
             if(ii)
             {
-                ii->attachedRoomInViewport();
+                ii->attachedRoomEnteredViewport();
             }
         }
     }
+
+    // notify rooms no longer in viewport
+    QSet<QGraphicsItem *> noLongerVisible = roomsLastVisible - currentlyVisibleItems;
+    foreach(QGraphicsItem * i, noLongerVisible)
+    {
+        if(i->type() == ScreepsRoomMap2::Type)
+        {
+            ScreepsRoomMap2 * ii = qgraphicsitem_cast<ScreepsRoomMap2*>(i);
+            if(ii)
+            {
+                ii->attachedRoomLeftViewport();
+            }
+        }
+    }
+
+    roomsLastVisible = currentlyVisibleItems;
 }

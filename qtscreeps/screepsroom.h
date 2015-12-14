@@ -18,12 +18,16 @@ public:
 
     void install(QGraphicsScene * scene, qreal x, qreal y);
 
-    void handleInViewport();
+    void handleEnteredViewport();
+    void handleLeftViewport();
 
 signals:
     void RequestRoomTerrain(QString roomName);
     void SubscribeRoomMap2(QString roomName);
     void SubscribeRoomFeed(QString roomName);
+
+    void UnsubscribeRoomMap2(QString roomName);
+    void UnsubscribeRoomFeed(QString roomName);
 
 public slots:
     //void update();

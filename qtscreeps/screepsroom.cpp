@@ -43,7 +43,7 @@ void ScreepsRoom::install(QGraphicsScene *scene, qreal x, qreal y)
     worldBackground->setPos(x, y);
 }
 
-void ScreepsRoom::handleInViewport()
+void ScreepsRoom::handleEnteredViewport()
 {
     if(!hasRequestedTerrain)
     {
@@ -68,4 +68,9 @@ void ScreepsRoom::handleInViewport()
         hasRequestedMapData = true;
         emit SubscribeRoomMap2(roomName);
     }
+}
+
+void ScreepsRoom::handleLeftViewport()
+{
+    emit UnsubscribeRoomMap2(roomName);
 }

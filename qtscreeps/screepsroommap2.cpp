@@ -32,9 +32,14 @@ void ScreepsRoomMap2::updateRoomMap2(QJsonObject rm2)
     this->update();
 }
 
-void ScreepsRoomMap2::attachedRoomInViewport()
+void ScreepsRoomMap2::attachedRoomEnteredViewport()
 {
-    attachedRoom->handleInViewport();
+    attachedRoom->handleEnteredViewport();
+}
+
+void ScreepsRoomMap2::attachedRoomLeftViewport()
+{
+    attachedRoom->handleLeftViewport();
 }
 
 /**
