@@ -63,11 +63,7 @@ void ScreepsRoom::handleEnteredViewport()
         }
     }
 
-    if(!hasRequestedMapData)
-    {
-        hasRequestedMapData = true;
-        emit SubscribeRoomMap2(roomName);
-    }
+    emit SubscribeRoomMap2(roomName);
 }
 
 void ScreepsRoom::handleLeftViewport()
